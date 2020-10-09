@@ -1,0 +1,17 @@
+repos:
+    # black
+    -   repo: https://github.com/ambv/black
+        rev: stable
+        hooks:
+        - id: black
+          language_version: python3
+    # flake8: pinned version required since flake8 doesn't have 'stable' or other generic tag in their repo
+    -   repo: https://gitlab.com/pycqa/flake8
+        rev: 3.7.7
+        hooks:
+        - id: flake8
+          args: ["--config=.flake8"]
+    -   repo: https://github.com/PyCQA/bandit
+        rev: 1.6.2
+        hooks:
+        - id: bandit
