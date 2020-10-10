@@ -1,13 +1,46 @@
 from flask import Flask, request
 from config import logger
+from user_lookup import lookup_user_by_id
+from threading import Thread
+import config
 
 app = Flask(__name__)
 
+env = config.ENV
 
-@app.route("/")
-@app.route("/index")
-def index():
-    return "<h1>Hello World!</h1>"
+
+class Process(Thread):
+    def __init__(self, request):
+        Thread.__init__(self)
+        self.request = request
+
+    def run(self):
+        payload = self.request.get_json()
+        # task_id = payload["oId"]
+        # task_name = payload["oName"]
+        # browser_name = payload["env.browser.name"]
+        # browser_ver = payload["env.browser.version"]
+        # os_name = payload["env.os.name"]
+        user_id = payload["wm.euId"]
+        # if "wm.language" in payload:
+        #     language = payload["wm.language"]
+        # env = payload["wm.env"]
+        # created_at = payload["created_at"]
+        # url = payload["ctx.location.hostname"]
+
+        user_email = lookup_user_by_id(env, user_id)
+        logger.info(f"User email: {user_email}")
+
+        # Insert into DB
+        # Todo
+
+        logger.info("Done Processing")
+
+
+# @app.route("/")
+# @app.route("/index")
+# def index():
+#     return "<h1>Hello World!</h1>"
 
 
 @app.route("/analytics/api/v1/walkmetasks", methods=["POST"])
@@ -34,16 +67,10 @@ def process_task_webhook():
             return ("Missing expected values", 400)
 
         logger.info(payload)
+        logger.info("Processing Request")
 
-        # task_id = payload["oId"]
-        # task_name = payload["oName"]
-        # browser_name = payload["env.browser.name"]
-        # browser_ver = payload["env.browser.version"]
-        # os_name = payload["env.os.name"]
-        # user_id = payload["wm.euId"]
-        # env = payload["wm.env"]
-        # created_at = payload["created_at"]
-        # url = payload["ctx.location.hostname"]
+        thread = Process(request.__copy__())
+        thread.start()
 
         return ("Accepted", 200)
     else:
@@ -74,8 +101,9 @@ def process_swt_started_webhook():
     #    "wm.userVars.type": "",
     #    "wm.userVars.status": "",
     #    "wm.userVars.info": "",
-    #    "event_info": "<wm.euId> started Clusters Main Menu on Chrome
-    #       85.0.4183.83 "
+    #    "event_info": "
+    #       6ede1366dd24367bbd5dba50125e285f1e644d51d1a806cf958fbd6d
+    #       started Clusters Main Menu on Chrome 85.0.4183.83"
     # }
 
     return ("OK", 200)

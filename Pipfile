@@ -4,11 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+ipython = "*"
 
 [packages]
 flask = "*"
 gunicorn = "*"
 pre-commit = "*"
+google-cloud-firestore = "*"
 
 [requires]
 python_version = "3.8"
