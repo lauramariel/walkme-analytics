@@ -2,8 +2,10 @@ from flask import Flask, request
 from config import logger
 from user_lookup import lookup_user_by_id
 from threading import Thread
+from flask import render_template
 import config
 import pymongo
+import datetime
 
 app = Flask(__name__)
 
@@ -60,6 +62,59 @@ class Process(Thread):
         logger.info("Successfully inserted data into DB")
 
 
+# dashboard
+@app.route("/dashboard", methods=["GET", "POST"])
+def dashboard():
+    started = db[started_tbl]
+    completed = db[tasks_tbl]
+    # all_data = list(started.find())
+    # logger.debug(all_data)
+    logger.debug(f"Started count: {started.count()}")
+    logger.debug(f"Completed count: {completed.count()}")
+
+    # Last 10 Started Walkthroughs
+    if started.count() < 10:
+        # if less than 10 then show all
+        last_10_started = list(started.find())
+    else:
+        last_10_started = list(started.find().skip(started.count() - 10))
+
+    # Last 10 Completed Modules
+    if completed.count() < 10:
+        # if less than 10 then show all
+        last_10_completed = list(completed.find())
+    else:
+        last_10_completed = list(completed.find().skip(completed.count() - 10))
+
+    # convert timestamps
+    for i in last_10_completed:
+        epoch = i["created_at"] / 1000
+        new_time = (
+            datetime.datetime.fromtimestamp(epoch)
+            .astimezone()
+            .strftime("%Y-%m-%d %I:%M:%S")
+        )
+        i["created_at"] = new_time
+
+    for i in last_10_started:
+        epoch = i["created_at"] / 1000
+        new_time = (
+            datetime.datetime.fromtimestamp(epoch)
+            .astimezone()
+            .strftime("%Y-%m-%d %I:%M:%S")
+        )
+        i["created_at"] = new_time
+
+    # Most Popular Completed Modules
+    return render_template(
+        "index.html",
+        last_10_started=last_10_started,
+        last_10_completed=last_10_completed,
+        total_completed=completed.count(),
+    )
+
+
+# webhook routes
 @app.route("/analytics/api/v1/walkmetasks", methods=["POST"])
 def process_task_webhook():
     logger.info("Request received")

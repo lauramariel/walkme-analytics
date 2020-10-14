@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WalkMe Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+    <table class="table table-striped table-sm table-hover">
+        <caption>Last 10 Started</caption>
+        <thead>
+            <tr>
+                <th>Date (UTC)</th></td>
+                <th>User</th>
+                <th>Module</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in last_10_started %}
+                <tr>
+                    <td>{{ i.created_at }}</td>
+                    <td>{{ i.user_email }}</td>
+                    <td>{{ i.oName }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="table table-striped table-sm table-hover">
+        <caption>Last 10 Completed</caption>
+        <thead>
+            <tr>
+                <th>Date (UTC)</th></td>
+                <th>User</th>
+                <th>Module</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in last_10_completed %}
+                <tr>
+                    <td>{{ i.created_at }}</td>
+                    <td>{{ i.user_email }}</td>
+                    <td>{{ i.oName }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    Total Completed: {{ total_completed }}
+
+</body>
+</html>

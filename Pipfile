@@ -12,6 +12,7 @@ flask = "*"
 gunicorn = "*"
 google-cloud-firestore = "*"
 pymongo = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.8"
