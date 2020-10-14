@@ -1,0 +1,9 @@
+# mac inventory
+.DS_STORE
+# secrets
+secret
+secrets/
+secrets/*
+secrets/**/*
+secrets
+secrets.tar.gz

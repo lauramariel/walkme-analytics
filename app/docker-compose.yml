@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+    web:
+        depends_on:
+            - "mongo"
+        build: .
+        ports:
+            - "8000:8000"
+        volumes:
+            - "/Users/laura.jordana/Development/walkme-analytics/secrets/key.json:/app/key.json"
+        environment:
+            - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
+    mongo:
+        image: "mongo:latest"
+        ports:
+            - "27017:27017"
+        volumes:
+            - "/Users/laura.jordana/mongo-data:/data/db"

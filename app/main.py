@@ -13,8 +13,8 @@ tasks_tbl = config.COLLECTIONS["tasks"]
 started_tbl = config.COLLECTIONS["started"]
 
 # connect to DB
-dbclient = pymongo.MongoClient("mongodb://localhost:27017")
-db = dbclient["wm_analytics"]
+dbclient = pymongo.MongoClient(config.DB_CLIENT)
+db = dbclient[config.DB_NAME]
 
 
 class Process(Thread):

@@ -27,4 +27,7 @@ ENV = "prod"
 #     "wm.userVars.info",
 # ]
 
+# Database
+DB_NAME = "wm_analytics"
+DB_CLIENT = "mongodb://mongo:27017"
 COLLECTIONS = {"started": "started_walkthroughs", "tasks": "completed_tasks"}
