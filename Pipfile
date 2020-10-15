@@ -13,6 +13,7 @@ gunicorn = "*"
 google-cloud-firestore = "*"
 pymongo = "*"
 jinja2 = "*"
+python-bsonjs = "*"
 
 [requires]
 python_version = "3.8"

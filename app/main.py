@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from config import logger
 from user_lookup import lookup_user_by_id
 from threading import Thread
 from flask import render_template
+from bson.json_util import dumps
 import config
 import pymongo
 import datetime
@@ -67,6 +68,7 @@ class Process(Thread):
 def dashboard():
     started = db[started_tbl]
     completed = db[tasks_tbl]
+
     # all_data = list(started.find())
     # logger.debug(all_data)
     logger.debug(f"Started count: {started.count()}")
@@ -106,12 +108,53 @@ def dashboard():
         i["created_at"] = new_time
 
     # Most Popular Completed Modules
+    # TBD
+
     return render_template(
         "index.html",
         last_10_started=last_10_started,
         last_10_completed=last_10_completed,
         total_completed=completed.count(),
     )
+
+
+@app.route("/dashboard/export/<collection>")
+def export_files(collection):
+    if collection == "started":
+        logger.info("Started collection requested")
+        started = db[started_tbl]
+        started_data = started.find()
+        with open("started.json", "w") as file:
+            file.write("[")
+            for document in started_data:
+                # need to use json_utils because of
+                # bson format returned by mongo
+                file.write(dumps(document))
+                file.write(",")
+            file.write("]")
+        logger.info("Started collection written to file")
+        filename = "started.json"
+        return send_file(filename, attachment_filename=filename, as_attachment=True)
+
+    if collection == "completed":
+        logger.info("Completed collection requested")
+        completed = db[tasks_tbl]
+        completed_data = completed.find()
+        with open("completed.json", "w") as file:
+            file.write("[")
+            for document in completed_data:
+                file.write(dumps(document))
+                file.write(",")
+            file.write("]")
+        logger.info("Completed collection written to file")
+        filename = "completed.json"
+        return send_file(filename, attachment_filename=filename, as_attachment=True)
+        # return Response(
+        #     file,
+        #     mimetype="text/plain",
+        #     headers={"Content-disposition":
+        #             "attachment; filename=completed.json"}
+        # )
 
 
 # webhook routes
