@@ -77,16 +77,16 @@ def dashboard():
     # Last 10 Started Walkthroughs
     if started.count() < 10:
         # if less than 10 then show all
-        last_10_started = list(started.find())
+        last_10_started = list(started.find().sort("created_at", -1))
     else:
-        last_10_started = list(started.find().skip(started.count() - 10))
+        last_10_started = list(started.find().sort("created_at", -1).limit(10))
 
     # Last 10 Completed Modules
     if completed.count() < 10:
         # if less than 10 then show all
-        last_10_completed = list(completed.find())
+        last_10_completed = list(completed.find().sort("created_at", -1))
     else:
-        last_10_completed = list(completed.find().skip(completed.count() - 10))
+        last_10_completed = list(completed.find().sort("created_at", -1).limit(10))
 
     # convert timestamps
     for i in last_10_completed:
@@ -146,7 +146,7 @@ def export_files(collection):
                 file.write(dumps(document))
                 file.write(",")
             file.write("]")
-        logger.info("Completed collection written to file")
+        logger.info("Completed collection written to")
         filename = "completed.json"
         return send_file(filename, attachment_filename=filename, as_attachment=True)
         # return Response(
