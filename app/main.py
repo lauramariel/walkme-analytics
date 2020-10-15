@@ -35,7 +35,14 @@ class Process(Thread):
 
         # convert user_id to email
         user_email = lookup_user_by_id(env, user_id)
-        logger.info(f"User email: {user_email}")
+
+        if len(user_email) <= 0:
+            logger.info(
+                f"User email not found, most likely system was accessed without auth"
+            )
+            user_email = "None"
+        else:
+            logger.info(f"User email: {user_email}")
 
         payload["user_email"] = user_email
         logger.debug(f"Payload with user_email: {payload}")
@@ -71,41 +78,65 @@ def dashboard():
 
     # all_data = list(started.find())
     # logger.debug(all_data)
-    logger.debug(f"Started count: {started.count()}")
-    logger.debug(f"Completed count: {completed.count()}")
+
+    scount = started.count()
+    ccount = completed.count()
+
+    logger.debug(f"Started count: {scount}")
+    logger.debug(f"Completed count: {ccount}")
 
     # Last 10 Started Walkthroughs
-    if started.count() < 10:
+    if scount < 10:
         # if less than 10 then show all
         last_10_started = list(started.find().sort("created_at", -1))
     else:
         last_10_started = list(started.find().sort("created_at", -1).limit(10))
 
     # Last 10 Completed Modules
-    if completed.count() < 10:
+    if ccount < 10:
         # if less than 10 then show all
         last_10_completed = list(completed.find().sort("created_at", -1))
     else:
         last_10_completed = list(completed.find().sort("created_at", -1).limit(10))
 
-    # convert timestamps
+    # convert timestamps and
+    # convert wm_env to string value
+    # 0 = Prod
+    # 2 = Editor
+    # 3 = Stage
     for i in last_10_completed:
         epoch = i["created_at"] / 1000
         new_time = (
             datetime.datetime.fromtimestamp(epoch)
             .astimezone()
-            .strftime("%Y-%m-%d %I:%M:%S")
+            .strftime("%Y-%m-%d %H:%M:%S")
         )
         i["created_at"] = new_time
+
+        wm_env = i["wm_env"]
+        if wm_env == 0:
+            i["wm_env"] = "prod"
+        elif wm_env == 2:
+            i["wm_env"] = "editor"
+        elif wm_env == 3:
+            i["wm_env"] = "stage"
 
     for i in last_10_started:
         epoch = i["created_at"] / 1000
         new_time = (
             datetime.datetime.fromtimestamp(epoch)
             .astimezone()
-            .strftime("%Y-%m-%d %I:%M:%S")
+            .strftime("%Y-%m-%d %H:%M:%S")
         )
         i["created_at"] = new_time
+
+        wm_env = i["wm_env"]
+        if wm_env == 0:
+            i["wm_env"] = "prod"
+        elif wm_env == 2:
+            i["wm_env"] = "editor"
+        elif wm_env == 3:
+            i["wm_env"] = "stage"
 
     # Most Popular Completed Modules
     # TBD
@@ -146,7 +177,7 @@ def export_files(collection):
                 file.write(dumps(document))
                 file.write(",")
             file.write("]")
-        logger.info("Completed collection written to")
+        logger.info("Completed collection written to file")
         filename = "completed.json"
         return send_file(filename, attachment_filename=filename, as_attachment=True)
         # return Response(
