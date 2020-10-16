@@ -139,13 +139,22 @@ def dashboard():
             i["wm_env"] = "stage"
 
     # Most Popular Completed Modules
-    # TBD
+    pipeline = [{"$group": {"_id": "$oName", "count": {"$sum": 1}}}]
+    agg = list(db.completed_tasks.aggregate(pipeline))
+    # initialize the max
+    max = 0
+    for i in agg:
+        if i["count"] > max:
+            max_name = i["_id"]
+            max = i["count"]
 
     return render_template(
         "index.html",
         last_10_started=last_10_started,
         last_10_completed=last_10_completed,
         total_completed=completed.count(),
+        most_popular=max_name,
+        most_popular_count=max,
     )
 
 
