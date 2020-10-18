@@ -76,6 +76,7 @@ def dashboard():
     started = db[started_tbl]
     completed = db[tasks_tbl]
 
+    all_users = started.distinct("user_email")
     # all_data = list(started.find())
     # logger.debug(all_data)
 
@@ -99,44 +100,24 @@ def dashboard():
     else:
         last_10_completed = list(completed.find().sort("created_at", -1).limit(10))
 
-    # convert timestamps and
-    # convert wm_env to string value
-    # 0 = Prod
-    # 2 = Editor
-    # 3 = Stage
+    # convert timestamps and wm_env
     for i in last_10_completed:
-        epoch = i["created_at"] / 1000
-        new_time = (
-            datetime.datetime.fromtimestamp(epoch)
-            .astimezone()
-            .strftime("%Y-%m-%d %H:%M:%S")
-        )
+        orig_time = i["created_at"]
+        new_time = format_time(orig_time)
         i["created_at"] = new_time
 
         wm_env = i["wm_env"]
-        if wm_env == 0:
-            i["wm_env"] = "prod"
-        elif wm_env == 2:
-            i["wm_env"] = "editor"
-        elif wm_env == 3:
-            i["wm_env"] = "stage"
+        env_text = format_wm_env(wm_env)
+        i["wm_env"] = env_text
 
     for i in last_10_started:
-        epoch = i["created_at"] / 1000
-        new_time = (
-            datetime.datetime.fromtimestamp(epoch)
-            .astimezone()
-            .strftime("%Y-%m-%d %H:%M:%S")
-        )
+        orig_time = i["created_at"]
+        new_time = format_time(orig_time)
         i["created_at"] = new_time
 
         wm_env = i["wm_env"]
-        if wm_env == 0:
-            i["wm_env"] = "prod"
-        elif wm_env == 2:
-            i["wm_env"] = "editor"
-        elif wm_env == 3:
-            i["wm_env"] = "stage"
+        env_text = format_wm_env(wm_env)
+        i["wm_env"] = env_text
 
     # Most Popular Completed Modules
     pipeline = [{"$group": {"_id": "$oName", "count": {"$sum": 1}}}]
@@ -155,9 +136,70 @@ def dashboard():
         total_completed=completed.count(),
         most_popular=max_name,
         most_popular_count=max,
+        user_list=all_users,
     )
 
 
+# convert time from epoch to UTC
+def format_time(orig_time):
+    epoch = orig_time / 1000
+    new_time = (
+        datetime.datetime.fromtimestamp(epoch)
+        .astimezone()
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+    return new_time
+
+
+# convert wm_env to string value
+# 0 = Prod
+# 2 = Editor
+# 3 = Stage
+def format_wm_env(wm_env):
+    wm_env_text = ""
+
+    if wm_env == 0:
+        wm_env_text = "prod"
+    elif wm_env == 2:
+        wm_env_text = "editor"
+    elif wm_env == 3:
+        wm_env_text = "stage"
+
+    return wm_env_text
+
+
+# list info for a particular user
+@app.route("/dashboard/lookupuser", methods=["GET", "POST"])
+def user_info():
+    started = db[started_tbl]
+    completed = db[tasks_tbl]
+    logger.info(f"Request form: {request.form}")
+    user_email = request.form.get("user").replace(" ", "").replace("\t", "")
+    logger.info(f"Formatted: {user_email}")
+    user_completed = list(completed.find({"user_email": user_email}))
+    user_started = list(started.find({"user_email": user_email}))
+
+    # format timestamps
+    for i in user_completed:
+        orig_time = i["created_at"]
+        new_time = format_time(orig_time)
+        i["created_at"] = new_time
+
+    for i in user_started:
+        orig_time = i["created_at"]
+        new_time = format_time(orig_time)
+        i["created_at"] = new_time
+
+    # render page
+    return render_template(
+        "user_info.html",
+        user_email=user_email,
+        user_completed=user_completed,
+        user_started=user_started,
+    )
+
+
+# export
 @app.route("/dashboard/export/<collection>")
 def export_files(collection):
     if collection == "started":

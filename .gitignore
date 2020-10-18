@@ -7,3 +7,6 @@ secrets/*
 secrets/**/*
 secrets
 secrets.tar.gz
+# sample_data
+sample_data
+sample_data/*

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WalkMe Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+    <div>
+        <table class="table table-striped table-sm table-hover">
+        <caption>Started Tasks for {{ user_email }}</caption>
+            <thead>
+                <tr>
+                    <th>Date (UTC)</th></td>
+                    <th>User</th>
+                    <th>Module</th>
+                    <th>Browser</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for i in user_started %}
+                <tr>
+                    <td>{{ i.created_at }}</td>
+                    <td>{{ user_email }}</td>
+                    <td>{{ i.oName }}</td>
+                    <td>{{ i.env_browser_name }} {{ i.env_browser_version }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    <div>
+    <table class="table table-striped table-sm table-hover">
+    <caption>Completed Modules for {{ user_email }}</caption>
+        <thead>
+            <tr>
+                <th>Date (UTC)</th></td>
+                <th>User</th>
+                <th>Module</th>
+                <th>Browser</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for i in user_completed %}
+            <tr>
+                <td>{{ i.created_at }}</td>
+                <td>{{ user_email }}</td>
+                <td>{{ i.oName }}</td>
+                <td>{{ i.env_browser_name }} {{ i.env_browser_version }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div>
+        <a href="/dashboard">Return to dashboard</a>
+    </div>
+
+</body>
+</html>
