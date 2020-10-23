@@ -124,6 +124,7 @@ def dashboard():
     agg = list(db.completed_tasks.aggregate(pipeline))
     # initialize the max
     max = 0
+    max_name = 0
     for i in agg:
         if i["count"] > max:
             max_name = i["_id"]

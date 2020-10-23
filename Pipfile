@@ -13,7 +13,10 @@ gunicorn = "*"
 google-cloud-firestore = "*"
 pymongo = "*"
 jinja2 = "*"
-python-bsonjs = "*"
+google-cloud-secret-manager = "*"
+google-cloud-core = "*"
+google-api-core = "*"
+dnspython = "*"
 
 [requires]
 python_version = "3.8"
