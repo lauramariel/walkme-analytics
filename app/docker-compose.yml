@@ -9,10 +9,3 @@ services:
             - "/Users/laura.jordana/Development/walkme-analytics/secrets/key.json:/app/key.json"
         environment:
             - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
-    # nginx:
-    #     image: "nginx:latest"
-    #     volumes:
-    #         - "/Users/laura.jordana/nginx.conf:/etc/nginx/nginx.conf"
-    #     ports:
-    #         - "80:80"
-    #         - "443:443"

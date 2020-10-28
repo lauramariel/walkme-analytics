@@ -19,6 +19,8 @@ started_tbl = config.COLLECTIONS["started"]
 dbclient = pymongo.MongoClient(config.DB_CLIENT)
 db = dbclient[config.DB_NAME]
 
+# class to process the webhooks
+
 
 class Process(Thread):
     def __init__(self, request, kind):
@@ -172,13 +174,18 @@ def format_wm_env(wm_env):
 # list info for a particular user
 @app.route("/dashboard/lookupuser", methods=["GET", "POST"])
 def user_info():
-    started = db[started_tbl]
+    # started = db[started_tbl]
     completed = db[tasks_tbl]
     logger.info(f"Request form: {request.form}")
-    user_email = request.form.get("user").replace(" ", "").replace("\t", "")
+
+    # remove any tabs and spaces from email and make it lowercase
+    user_email = request.form.get("user").replace(" ", "").replace("\t", "").lower()
+
     logger.info(f"Formatted: {user_email}")
-    user_completed = list(completed.find({"user_email": user_email}))
-    user_started = list(started.find({"user_email": user_email}))
+    user_completed = list(
+        completed.find({"user_email": user_email}).sort("created_at", -1)
+    )
+    # user_started = list(started.find({"user_email": user_email}).sort("created_at", -1))
 
     # format timestamps
     for i in user_completed:
@@ -186,17 +193,17 @@ def user_info():
         new_time = format_time(orig_time)
         i["created_at"] = new_time
 
-    for i in user_started:
-        orig_time = i["created_at"]
-        new_time = format_time(orig_time)
-        i["created_at"] = new_time
+    # for i in user_started:
+    #     orig_time = i["created_at"]
+    #     new_time = format_time(orig_time)
+    #     i["created_at"] = new_time
 
     # render page
     return render_template(
         "user_info.html",
         user_email=user_email,
         user_completed=user_completed,
-        user_started=user_started,
+        # user_started=user_started,
     )
 
 
