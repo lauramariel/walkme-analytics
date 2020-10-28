@@ -46,7 +46,9 @@ class Process(Thread):
         else:
             logger.info(f"User email: {user_email}")
 
-        payload["user_email"] = user_email
+        # remove tabs and spaces from e-mail before adding to payload
+        payload["user_email"] = user_email.replace(" ", "").replace("\t", "").lower()
+
         logger.debug(f"Payload with user_email: {payload}")
 
         # change any keys with a . to a _ because mongo doesn't like .
