@@ -306,8 +306,9 @@ def process_swt_started_webhook():
         logger.error("Request is not json")
         return ("Invalid request", 400)
 
+
 @app.route("/analytics/api/v1/walkmesurvey", methods=["POST"])
-def process_swt_started_webhook():
+def process_swt_survey_webhook():
     logger.info("Request received on /walkmesurvey")
 
     if request.is_json:
@@ -324,6 +325,7 @@ def process_swt_started_webhook():
     else:
         logger.error("Request is not json")
         return ("Invalid request", 400)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

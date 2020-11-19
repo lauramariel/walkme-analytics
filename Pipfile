@@ -17,6 +17,7 @@ google-cloud-secret-manager = "*"
 google-cloud-core = "*"
 google-api-core = "*"
 dnspython = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.8"
