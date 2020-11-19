@@ -14,6 +14,7 @@ env = config.ENV
 # required = config.EXPECTED_VALUES
 tasks_tbl = config.COLLECTIONS["tasks"]
 started_tbl = config.COLLECTIONS["started"]
+survey_tbl = config.COLLECTIONS["survey"]
 
 # connect to DB
 dbclient = pymongo.MongoClient(config.DB_CLIENT)
@@ -58,19 +59,24 @@ class Process(Thread):
 
         logger.debug(f"Updated payload: {updated_payload}")
 
+        # default to tasks table
+        collection = db[tasks_tbl]
+
         # if it's a task, store it in task collection
         # with proper names
         if self.kind == "task":
             collection = db[tasks_tbl]
-            insert = collection.insert_one(updated_payload)
-            logger.info(insert.inserted_id)
 
         # if it's a SWT started event, store it in the started collection
         elif self.kind == "started":
             collection = db[started_tbl]
-            insert = collection.insert_one(updated_payload)
-            logger.info(insert.inserted_id)
 
+        # if it's a SWT started event, store it in the started collection
+        elif self.kind == "survey":
+            collection = db[survey_tbl]
+
+        insert = collection.insert_one(updated_payload)
+        logger.info(insert.inserted_id)
         logger.info("Successfully inserted data into DB")
 
 
@@ -252,7 +258,7 @@ def export_files(collection):
 # webhook routes
 @app.route("/analytics/api/v1/walkmetasks", methods=["POST"])
 def process_task_webhook():
-    logger.info("Request received")
+    logger.info("Request received on /walkmetasks")
 
     # if Content-Type=application/json
     if request.is_json:
@@ -278,7 +284,7 @@ def process_task_webhook():
 
 @app.route("/analytics/api/v1/walkmestarted", methods=["POST"])
 def process_swt_started_webhook():
-    logger.info("Request received")
+    logger.info("Request received on /walkmestarted")
 
     if request.is_json:
         payload = request.get_json()
@@ -300,6 +306,24 @@ def process_swt_started_webhook():
         logger.error("Request is not json")
         return ("Invalid request", 400)
 
+@app.route("/analytics/api/v1/walkmesurvey", methods=["POST"])
+def process_swt_started_webhook():
+    logger.info("Request received on /walkmesurvey")
+
+    if request.is_json:
+        payload = request.get_json()
+
+        logger.debug(payload)
+        logger.info("Processing Request")
+
+        # process the request as a started event
+        thread = Process(request.__copy__(), "survey")
+        thread.start()
+
+        return ("Accepted", 200)
+    else:
+        logger.error("Request is not json")
+        return ("Invalid request", 400)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
