@@ -24,4 +24,8 @@ DB_NAME = "wm_analytics"
 DB_CLIENT = (
     f"mongodb+srv://{MONGO_CREDS}@{MONGO_URL}/{DB_NAME}?retryWrites=true&w=majority"
 )
-COLLECTIONS = {"started": "started_walkthroughs", "tasks": "completed_tasks"}
+COLLECTIONS = {
+    "started": "started_walkthroughs",
+    "tasks": "completed_tasks",
+    "survey": "survey_results",
+}
