@@ -80,11 +80,84 @@ class Process(Thread):
         logger.info("Successfully inserted data into DB")
 
 
+# webhook routes
+@app.route("/analytics/api/v1/walkmetasks", methods=["POST"])
+def process_task_webhook():
+    logger.info("Request received on /walkmetasks")
+
+    # if Content-Type=application/json
+    if request.is_json:
+        payload = request.get_json()
+
+        # if not all(k in payload for k in required):
+        #     logger.error("Missing expected values")
+        #     logger.error(payload)
+        #     return ("Missing expected values", 400)
+
+        logger.debug(payload)
+        logger.debug("Processing Request")
+
+        # process the request as a task
+        thread = Process(request.__copy__(), "task")
+        thread.start()
+
+        return ("Accepted", 200)
+    else:
+        logger.error("Request is not json")
+        return ("Invalid request", 400)
+
+
+@app.route("/analytics/api/v1/walkmestarted", methods=["POST"])
+def process_swt_started_webhook():
+    logger.info("Request received on /walkmestarted")
+
+    if request.is_json:
+        payload = request.get_json()
+
+        # if not all(k in payload for k in required):
+        #     logger.error("Missing expected values")
+        #     logger.error(payload)
+        #     return ("Missing expected values", 400)
+
+        logger.debug(payload)
+        logger.info("Processing Request")
+
+        # process the request as a started event
+        thread = Process(request.__copy__(), "started")
+        thread.start()
+
+        return ("Accepted", 200)
+    else:
+        logger.error("Request is not json")
+        return ("Invalid request", 400)
+
+
+@app.route("/analytics/api/v1/walkmesurvey", methods=["POST"])
+def process_swt_survey_webhook():
+    logger.info("Request received on /walkmesurvey")
+
+    if request.is_json:
+        payload = request.get_json()
+
+        logger.debug(payload)
+        logger.info("Processing Request")
+
+        # process the request as a started event
+        thread = Process(request.__copy__(), "survey")
+        thread.start()
+
+        return ("Accepted", 200)
+    else:
+        logger.error("Request is not json")
+        return ("Invalid request", 400)
+
+
 # dashboard
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
     started = db[started_tbl]
     completed = db[tasks_tbl]
+    survey = db[survey_tbl]
 
     all_users = started.distinct("user_email")
     # all_data = list(started.find())
@@ -92,7 +165,11 @@ def dashboard():
 
     scount = started.count()
     ccount = completed.count()
+    svcount = survey.find(
+        {"oName": "How was your Test Drive experience today?"}
+    ).count()
 
+    logger.debug(f"Surveys Taken: {svcount}")
     logger.debug(f"Started count: {scount}")
     logger.debug(f"Completed count: {ccount}")
 
@@ -148,6 +225,7 @@ def dashboard():
         most_popular=max_name,
         most_popular_count=max,
         user_list=all_users,
+        surveycount=svcount,
     )
 
 
@@ -255,76 +333,26 @@ def export_files(collection):
         # )
 
 
-# webhook routes
-@app.route("/analytics/api/v1/walkmetasks", methods=["POST"])
-def process_task_webhook():
-    logger.info("Request received on /walkmetasks")
+@app.route("/dashboard/surveys", methods=["GET", "POST"])
+def survey_results():
+    # started = db[started_tbl]
+    surveys = db[survey_tbl]
 
-    # if Content-Type=application/json
-    if request.is_json:
-        payload = request.get_json()
+    # returns a list of dicts
+    survey_results = list(surveys.find().sort("created_at", -1).limit(100))
 
-        # if not all(k in payload for k in required):
-        #     logger.error("Missing expected values")
-        #     logger.error(payload)
-        #     return ("Missing expected values", 400)
+    # format timestamps and hostname by updating the dictionary
+    for i in survey_results:
+        orig_time = i["created_at"]
+        new_time = format_time(orig_time)
+        i["created_at"] = new_time
 
-        logger.debug(payload)
-        logger.debug("Processing Request")
+        orig_hostname = i["ctx_location_hostname"]
+        new_hostname = orig_hostname.split(".")[0]
+        i["ctx_location_hostname"] = new_hostname
 
-        # process the request as a task
-        thread = Process(request.__copy__(), "task")
-        thread.start()
-
-        return ("Accepted", 200)
-    else:
-        logger.error("Request is not json")
-        return ("Invalid request", 400)
-
-
-@app.route("/analytics/api/v1/walkmestarted", methods=["POST"])
-def process_swt_started_webhook():
-    logger.info("Request received on /walkmestarted")
-
-    if request.is_json:
-        payload = request.get_json()
-
-        # if not all(k in payload for k in required):
-        #     logger.error("Missing expected values")
-        #     logger.error(payload)
-        #     return ("Missing expected values", 400)
-
-        logger.debug(payload)
-        logger.info("Processing Request")
-
-        # process the request as a started event
-        thread = Process(request.__copy__(), "started")
-        thread.start()
-
-        return ("Accepted", 200)
-    else:
-        logger.error("Request is not json")
-        return ("Invalid request", 400)
-
-
-@app.route("/analytics/api/v1/walkmesurvey", methods=["POST"])
-def process_swt_survey_webhook():
-    logger.info("Request received on /walkmesurvey")
-
-    if request.is_json:
-        payload = request.get_json()
-
-        logger.debug(payload)
-        logger.info("Processing Request")
-
-        # process the request as a started event
-        thread = Process(request.__copy__(), "survey")
-        thread.start()
-
-        return ("Accepted", 200)
-    else:
-        logger.error("Request is not json")
-        return ("Invalid request", 400)
+    # render page
+    return render_template("survey.html", survey_results=survey_results)
 
 
 if __name__ == "__main__":

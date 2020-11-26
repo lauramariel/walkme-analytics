@@ -1,0 +1,5 @@
+version: "3.8"
+services:
+    flask:
+        volumes:
+            - "/Users/laura.jordana/dev/walkme-analytics/secrets/key.json:/app/key.json"

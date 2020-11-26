@@ -5,7 +5,5 @@ services:
         build: .
         ports:
             - "8000:8000"
-        volumes:
-            - "/Users/laura.jordana/Development/walkme-analytics/secrets/key.json:/app/key.json"
         environment:
             - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
