@@ -1,0 +1,135 @@
+{% extends "ext_base.html" %}
+
+{% block content %}
+
+    <h4>Welcome {{ user_email }}!</h4>
+
+    {% if error is not none %}
+        <div class='errorBox'>{{ error }}</div>
+        <br />
+    {% endif %}
+
+    <div class="card-deck justify-content-center">
+        {% if active_xps.td2 is not defined %}
+            <div class="card tdpopup-card card-slim m-1">
+                <div class="d-flex align-items-center tdcard-title border-bottom">
+                    <h5 class="card-title m-0">Guided Nutanix Test Drive</h5>
+                </div>
+
+                <div class="card-body pt-4 pb-1 text-center">
+                    <a href="https://www.nutanix.com/one-platform/?id={{ user_email }}" target="_blank" class='btn btn-primary connect-button'>Request New Test Drive</a>
+                </div>
+
+            </div>
+        {% endif %}
+
+        <!-- All XPs - this is a list of tuples e.g.:
+             [('td2', 'Nutanix Test Drive'), ('era', 'Era Test Drive') ... etc]
+       
+        {% for cluster in all_xps %}
+            <ul>
+                <li>{{ cluster }}</li>
+                <li>{{ completed_tasks[cluster[0]] }} / {{ max_tasks[cluster[0]] }} Tasks Completed</li>
+            </ul>
+        {% endfor %}
+        -->
+
+        <!-- Active XPs -->
+        {% for cluster in all_xps %}
+
+            <!-- User does not have this experience currently assigned to them -->
+            {% if active_xps[cluster[0]] is not defined %}
+            <div class="card tdpopup-card card-slim m-1">
+                <div class="d-flex align-items-center tdcard-title border-bottom">
+                    <h3 class="card-title m-0">{{ cluster[1] }}</h3>
+                </div>
+
+                <div class="card-body">{{ completed_tasks[cluster[0]] }} / {{ max_tasks[cluster[0]] }} Tasks Completed</div>
+
+                <div class="card-body pt-4 pb-1 text-center">
+                    <a href="https://www.nutanix.com/one-platform/?id={{ user_email }}" target="_blank" class='btn btn-primary connect-button'>Request New Test Drive</a>
+                </div>
+
+            </div>
+
+            <!-- User has this experience assigned -->
+            {% elif active_xps[cluster] is not none %}
+                <!-- Cluster is not done provisioning -->
+                {% if active_xps[cluster[0]]['endtime'] is sameas false %}
+                    <div class="card tdpopup-card m-1">
+                        <div class="d-flex align-items-center tdcard-title border-bottom"> 
+                            <h3 class="card-title m-0">{{ xp_info[cluster[0]]['name'] }}</h3>
+                        </div>
+
+                        <div class="card-body">{{ completed_tasks[cluster[0]] }} / {{ max_tasks[cluster[0]] }} Tasks Completed</div>
+                        
+                        <div class="pt-4 pb-1 text-center">
+                            <div class='btn btn-secondary connect-button invisible'>Provisioning</div>
+                        </div>
+
+                        <div class="card-body align-items-center justify-content-center ">
+                            <div class="tdring mx-auto">
+                                <svg class="tdring">
+                                    <circle cx="100" cy="100" r="100"></circle>
+                                    <circle class ="td-provision-circle" id={{cluster}} cx="100" cy="100" r="100"></circle>
+                                </svg>
+                                <p class="tdprovisioning">Provisioning...</p>
+                            </div> 
+                        </div>
+                    </div>
+                <!-- Cluster is done provisioning -->           
+                {% else %}
+                    <div class="card tdpopup-card m-1">
+                        <div class="d-flex justify-content-center align-items-center tdcard-title border-bottom">
+                            <h3 class="card-title m-0">{{ xp_info[cluster[0]]['name'] }}</h3>
+                            <div class="ml-auto">
+                                {% if active_xps[cluster[0]]['guide']|length >=1 %}
+                                    <a href="{{ active_xps[cluster]['guide'] }}" target="_blank" class='btn btn-light border'>
+                                        Lab Guide <i class="launch fa fa-bars p-1" aria-hidden="true"></i>
+                                    </a>
+                                {% endif %}
+                                {% if (active_xps[cluster[0]]['links']['xi'] is defined ) and (active_xps[cluster[0]]['links']['xi'] is not none) %}
+                                    <a href="{{ active_xps[cluster]['links']['xi'] }}" target="_blank" class='btn btn-success'>
+                                        Cloud DR <i class="launch fa fa-skyatlas p-1" aria-hidden="true"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-body">{{ completed_tasks[cluster[0]] }} / {{ max_tasks[cluster[0]] }} Tasks Completed</div>
+
+                        <div class="pt-4 pb-1 text-center">
+                            <a href="{{ active_xps[cluster[0]]['links']['primary'] }}" target="_blank" class='btn btn-primary connect-button'>Connect</a>
+                        </div>
+
+                        <div class="card-body align-items-center justify-content-center ">
+                            <div class="tdring mx-auto">
+                                <svg class="tdring">
+                                    <circle cx="100" cy="100" r="100"></circle>
+                                    <circle class ="td-remaining-circle" id={{cluster}} cx="100" cy="100" r="100"></circle>
+                                    
+                                </svg>
+                                <p class="tdremaining">Time Remaining</p>
+                                <p class="td-timer" id='{{cluster}}'>{{ active_xps[cluster[0]]['time_left'] }}</p>
+                                {% if active_xps[cluster[0]]['extendable'] %}
+                                    <a href="{{ url_for('dashboard.add_time', experience=cluster, _scheme='http', _external=True) }}" class='btn btn-link add-time-button'>
+                                        +4 Hrs <i class="extend fa fa-clock-o" aria-hidden="true"></i>
+                                    </a>
+                                {% endif %}
+
+                            </div> 
+                        </div>
+                    </div>
+                   
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+    </div>
+
+    {% if launch_xp is none or launch_xp is not defined %}
+        <script id="dashboardjs" data-launch="" data-guide="" src="{{ url_for('static', filename='js/dashboard.js', _scheme='http', _external=True)}}"></script>
+    {% else %}
+        <script id="dashboardjs" data-launch="{{ active_xps[launch_xp]['links']['primary'] }}" data-guide="{{  active_xps[launch_xp]['guide'] }}" src="{{ url_for('static', filename='js/dashboard.js', _scheme='http', _external=True)}}"></script>
+    {% endif %}
+{% endblock %}

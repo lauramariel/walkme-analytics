@@ -7,6 +7,7 @@ from bson.json_util import dumps
 import config
 import pymongo
 import datetime
+import re
 
 app = Flask(__name__)
 
@@ -353,6 +354,166 @@ def survey_results():
 
     # render page
     return render_template("survey.html", survey_results=survey_results)
+
+
+@app.route("/userdash", methods=["GET", "POST"])
+def userdash():
+    # Check if the user is logged in
+    # and if their session hash is correct
+    error = None
+    launch_xp = None
+    user_email = "laura.jordana@nutanix.com"
+    active_xps = {
+        "td2": {
+            "status": 100,
+            "td_start": 1607639881,
+            "guide": "",
+            "endtime": 1607726281,
+            "name": "test",
+            "links": {"primary": "https://td2ugiyyx10ab.nutanixtestdrive.com/console/"},
+            "friendly_name": "Nutanix Test Drive",
+            "accessed": "false",
+            "time_left": "2:59",
+            "percent_left": 74,
+        }
+    }
+    # list of tuples
+    # [('td2', 'Nutanix Test Drive'), ('era', 'Era Test Drive') ... etc]
+    all_xps = config.EXPERIENCE_SETS
+
+    # dict of detailed xp_info
+    xp_info = config.XP_INFO
+
+    logger.info("xp_info " + str(type(xp_info)) + f"{xp_info}")
+    logger.info("all_xps " + str(type(all_xps)) + f"{all_xps}")
+
+    # get the user's completed tasks for all xps
+
+    # db collection
+    completed = db[tasks_tbl]
+
+    # dictionary to hold the total number of tasks completed
+    xp_dict = {}
+
+    # dictionary of total number of tasks per xp
+    max_tasks = {
+        "td2": 9,
+        "tdleap": 3,
+        "xileap": 3,
+        "tddata": 6,
+        "nx101": 4,
+        "karbon": 4,
+        "calm": 4,
+        "clusters": 3,
+        "minehycu": 1,
+        "flow": 4,
+        "files": 5,
+        "era": 4,
+        "prism": 0,
+    }
+
+    for xp in all_xps:
+        logger.info(f"Checking {xp[0]}")
+        xp_name = xp[0]
+
+        # handle granular tasks
+        if xp_name == "td2":
+            # look up td2-aos, td2-prismpro, td2-calm
+            total = completed.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_email": user_email,
+                            "oName": re.compile(
+                                r"\\|td2-aos\||\|td2-prismpro\||\|td2-calm\|"
+                            ),
+                        }
+                    },
+                    {"$group": {"_id": None, "count": {"$sum": 1}}},
+                ]
+            )
+
+        elif xp_name == "tddata":
+            total = completed.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_email": user_email,
+                            "oName": re.compile(
+                                r"\\|files-tddata\||\|objects-tddata\|"
+                            ),
+                        }
+                    },
+                    {"$group": {"_id": None, "count": {"$sum": 1}}},
+                ]
+            )
+
+        elif xp_name == "files":
+            total = completed.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_email": user_email,
+                            "oName": re.compile(r"\\|files\||\|files-tddata\|"),
+                        }
+                    },
+                    {"$group": {"_id": None, "count": {"$sum": 1}}},
+                ]
+            )
+
+        # xileap uses the same onboarding tasks as tdleap
+        elif xp_name == "xileap" or xp_name == "tdleap":
+            total = completed.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_email": user_email,
+                            "oName": re.compile(r"\\|tdleap\|"),
+                        }
+                    },
+                    {"$group": {"_id": None, "count": {"$sum": 1}}},
+                ]
+            )
+            # update the dictionary with the updated count
+
+        else:
+            total = completed.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_email": user_email,
+                            "oName": re.compile(
+                                r"\\|" + re.escape(f"{xp_name}") + r"\\|"
+                            ),
+                        }
+                    },
+                    {"$group": {"_id": None, "count": {"$sum": 1}}},
+                ]
+            )
+        # update the dictionary with the updated count if it exists
+        query_return = list(total)
+        logger.info(f"DB returns for {xp_name}: " + str(query_return))
+        if query_return:
+            xp_dict[xp_name] = query_return[0].get("count")
+        else:
+            xp_dict[xp_name] = 0
+        logger.info(f"xp_dict so far: {xp_dict}")
+
+    logger.info(f"Completed Tasks for {user_email}: {xp_dict}")
+
+    # And finally render the dashboard template
+
+    return render_template(
+        "user_dash_new.html",
+        user_email=user_email,
+        active_xps=active_xps,
+        all_xps=all_xps,
+        xp_info=xp_info,
+        error=error,
+        launch_xp=launch_xp,
+        completed_tasks=xp_dict,
+        max_tasks=max_tasks,
+    )
 
 
 if __name__ == "__main__":

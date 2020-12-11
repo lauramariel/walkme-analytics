@@ -1,0 +1,113 @@
+{
+    "td2": {
+        "name": "Nutanix Test Drive",
+        "json": "td2.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism"],
+        "primary_proxy": "prism"
+    },
+    "era": {
+        "name": "Era Test Drive",
+        "json": "era.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism", "era"],
+        "primary_proxy": "era"
+    },
+    "calm": {
+        "name": "Calm Deep Dive",
+        "json": "calm.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism"],
+        "primary_proxy": "prism"
+    },
+    "tdleap": {
+        "name": "Xi Leap Test Drive",
+        "json": "tdleap.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism", "xi"],
+        "primary_proxy": "prism"
+    },
+    "nx101": {
+        "name": "Nutanix 101 Test Drive",
+        "json": "nx101.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism"],
+        "primary_proxy": "prism"
+    },
+    "prism": {
+        "name": "Prism Pro Lab",
+        "json": "prism.json",
+        "lab": "http://ntnx.how/TD-PrismPro",
+        "walkme": "false",
+        "proxy": ["prism"],
+        "primary_proxy": "prism"
+    },
+    "xileap": {
+        "name": "Xi Leap Deep Dive",
+        "json": "xileap.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism", "xi"],
+        "primary_proxy": "prism"
+    },
+    "tddata": {
+        "name": "Unified Storage Test Drive",
+        "json": "tddata.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism", "fa"],
+        "primary_proxy": "prism"
+    },
+    "minehycu": {
+        "name": "Nutanix Mine with HYCU Test Drive",
+        "json": "minehycu.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["minepc", "hycu"],
+        "primary_proxy": "minepc"
+    },
+    "karbon": {
+        "name": "One-Click Kubernetes Deep Dive",
+        "json": "karbon.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism"],
+        "primary_proxy": "prism"
+    },
+    "files": {
+        "name": "Files Deep Dive",
+        "json": "files.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism", "fa", "fal", "gcp_vm", "fs_uuid"],
+        "primary_proxy": "prism",
+        "custom_config": {
+            "files-config": {
+                "sub_values": ["name", "DOMAIN"],
+                "string": "{ \"files_url\" : \"{name}-fal.{DOMAIN}\" }"
+            }
+        }
+    },
+    "flow": {
+        "name": "Flow Deep Dive",
+        "json": "flow.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["flowpc"],
+        "primary_proxy": "flowpc"
+    },
+    "clusters": {
+        "name": "Clusters on AWS Test Drive",
+        "json": "clusters.json",
+        "lab": "",
+        "walkme": "true",
+        "proxy": ["prism"],
+        "primary_proxy": "prism",
+        "is_aws": true
+    }
+}

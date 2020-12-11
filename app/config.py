@@ -29,3 +29,10 @@ COLLECTIONS = {
     "tasks": "completed_tasks",
     "survey": "survey_results",
 }
+
+with open("config/xp_info.json", "r") as infile:
+    XP_INFO = json.load(infile)
+# Create the name -> tdtype mappings
+EXPERIENCE_SETS = []
+for xp in XP_INFO:
+    EXPERIENCE_SETS.append((xp, XP_INFO[xp]["name"]))
