@@ -483,7 +483,7 @@ def userdash():
                         "$match": {
                             "user_email": user_email,
                             "oName": re.compile(
-                                r"\\|" + re.escape(f"{xp_name}") + r"\\|"
+                                r"\\|" + re.escape(f"{xp_name}") + "\\|"
                             ),
                         }
                     },
