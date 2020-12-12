@@ -6,7 +6,8 @@ from flask import render_template
 from bson.json_util import dumps
 import config
 import pymongo
-import datetime
+from datetime import datetime, timezone
+import requests
 
 app = Flask(__name__)
 
@@ -78,6 +79,83 @@ class Process(Thread):
         insert = collection.insert_one(updated_payload)
         logger.info(insert.inserted_id)
         logger.info("Successfully inserted data into DB")
+
+        # track intercom event for surveys in staging only
+        if (
+            "staging" in updated_payload.get("ctx_location_hostname")
+            and self.kind == "survey"
+        ):
+            logger.info(f"Calling get_intercom_id with {user_id} {user_email}")
+            intercom_id = get_intercom_id(marketo_id=user_id, email=user_email)
+            logger.info(f"intercom_id: {intercom_id}")
+            track_intercom_event(intercom_id, user_id, updated_payload)
+
+
+def track_intercom_event(intercom_id, marketo_id, event_data):
+    timestamp_now = int(datetime.now(timezone.utc).timestamp())
+    activated_body = {
+        "role": "user",
+        "external_id": marketo_id,
+        "last_seen_at": timestamp_now,
+        "custom_attributes": {"activated": True},
+    }
+    survey_question = event_data.get("oName")
+    survey_response = event_data.get("value")
+    user_update_url = config.INTERCOM_ENDPOINTS["contacts"] + f"/{intercom_id}"
+    event_track_url = config.INTERCOM_ENDPOINTS["events"]
+    event_track_body = {
+        "event_name": "Survey Completed",
+        "created_at": timestamp_now,
+        "user_id": marketo_id,
+        "metadata": {"Question": survey_question, "Answer": survey_response},
+    }
+
+    user_response = requests.post(
+        user_update_url, headers=config.INTERCOM_HEADERS, json=activated_body
+    )
+
+    logger.info(f"Intercom response: {user_response} {user_response.text}")
+    track_response = requests.post(
+        event_track_url, headers=config.INTERCOM_HEADERS, json=event_track_body
+    )
+
+    logger.info(f"Intercom response: {track_response} {track_response.text}")
+
+    return user_response.ok and track_response.ok
+
+
+def get_intercom_id(marketo_id=None, email=None):
+    """
+    Searches for a user by either marketo_id or email (whichever is provided)
+    Marketo_id overrides email if both are provided
+    """
+    if not (marketo_id or email):
+        logger.info(
+            f"intercom.get_intercom_id - No marketo_id "
+            + f"or e-mail provided - returning None"
+        )
+        return None
+    ic_query = dict(config.INTERCOM_QUERY_TEMPLATE)
+    if email:
+        ic_query["query"]["field"] = "email"
+        ic_query["query"]["value"] = email
+
+    if marketo_id:
+        ic_query["query"]["field"] = "external_id"
+        ic_query["query"]["value"] = marketo_id
+    logger.info(f"Querying intercom: {ic_query}")
+    # Execute the query
+    ic_response = requests.post(
+        config.INTERCOM_SEARCH, headers=config.INTERCOM_HEADERS, json=ic_query
+    )
+    logger.info(f"Intercom response: {ic_response} {ic_response.text}")
+    if ic_response.ok:
+        ic_json = ic_response.json()
+        if ic_json["total_count"] > 0:
+            intercom_id = ic_json["data"][0]["id"]
+            logger.info(f"Found user: {marketo_id}{email} => {intercom_id}")
+            return intercom_id
+    return None
 
 
 # webhook routes
