@@ -37,8 +37,8 @@
         <!-- Active XPs -->
         {% for cluster in all_xps %}
 
-            <!-- User does not have this experience currently assigned to them -->
             {% if active_xps[cluster[0]] is not defined %}
+            <!-- User does not have this experience currently assigned to them -->
             <div class="card tdpopup-card card-slim m-1">
                 <div class="d-flex align-items-center tdcard-title border-bottom">
                     <h3 class="card-title m-0">{{ cluster[1] }}</h3>
@@ -52,10 +52,11 @@
 
             </div>
 
-            <!-- User has this experience assigned -->
+
             {% elif active_xps[cluster] is not none %}
-                <!-- Cluster is not done provisioning -->
+                <!-- User has this experience assigned -->
                 {% if active_xps[cluster[0]]['endtime'] is sameas false %}
+                <!-- Cluster is not done provisioning -->
                     <div class="card tdpopup-card m-1">
                         <div class="d-flex align-items-center tdcard-title border-bottom"> 
                             <h3 class="card-title m-0">{{ xp_info[cluster[0]]['name'] }}</h3>
@@ -77,8 +78,9 @@
                             </div> 
                         </div>
                     </div>
-                <!-- Cluster is done provisioning -->           
+
                 {% else %}
+                    <!-- Cluster is done provisioning -->
                     <div class="card tdpopup-card m-1">
                         <div class="d-flex justify-content-center align-items-center tdcard-title border-bottom">
                             <h3 class="card-title m-0">{{ xp_info[cluster[0]]['name'] }}</h3>
