@@ -101,25 +101,37 @@ def track_intercom_event(intercom_id, marketo_id, event_data):
     }
     survey_question = event_data.get("oName")
     survey_response = event_data.get("value")
+    xp = event_data.get("ctx_location_hostname").split(".")[0][
+        :-10
+    ]  # change this to the constant the cloud engine uses
+
     user_update_url = config.INTERCOM_ENDPOINTS["contacts"] + f"/{intercom_id}"
     event_track_url = config.INTERCOM_ENDPOINTS["events"]
     event_track_body = {
-        "event_name": "Survey Completed",
+        "event_name": "Survey Response Recorded",
         "created_at": timestamp_now,
         "user_id": marketo_id,
-        "metadata": {"Question": survey_question, "Answer": survey_response},
+        "metadata": {
+            "Question": survey_question,
+            "Answer": survey_response,
+            "Experience": xp,
+        },
     }
 
-    user_response = requests.post(
+    user_response = requests.put(
         user_update_url, headers=config.INTERCOM_HEADERS, json=activated_body
     )
 
-    logger.info(f"Intercom response: {user_response} {user_response.text}")
+    logger.info(
+        f"Intercom response for user_update: {user_response} {user_response.text}"
+    )
     track_response = requests.post(
         event_track_url, headers=config.INTERCOM_HEADERS, json=event_track_body
     )
 
-    logger.info(f"Intercom response: {track_response} {track_response.text}")
+    logger.info(
+        f"Intercom response for track_event: {track_response} {track_response.text}"
+    )
 
     return user_response.ok and track_response.ok
 
