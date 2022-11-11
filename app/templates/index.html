@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>WalkMe Analytics Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-</head>
-<body>
-    <table class="table table-striped table-sm table-hover">
-        <caption>Last 10 Started</caption>
+{% extends 'ext_base.html' %}
+
+{% block content %}
+    <table id="completed" class="display">
+        <caption>Completed Test Drive Modules</caption>
         <thead>
             <tr>
                 <th>Date (UTC)</th></td>
@@ -19,7 +12,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for i in last_10_started %}
+            {% for i in last_completed %}
                 <tr>
                     <td>{{ i.created_at }}</td>
                     <td>{{ i.user_email }}</td>
@@ -30,8 +23,9 @@
         </tbody>
     </table>
 
-    <table class="table table-striped table-sm table-hover">
-        <caption>Last 10 Completed</caption>
+    <!-- <table class="table table-striped table-sm table-hover"> -->
+        <table id="started" class="display">
+        <caption>Last 100 Started Modules</caption>
         <thead>
             <tr>
                 <th>Date (UTC)</th></td>
@@ -41,7 +35,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for i in last_10_completed %}
+            {% for i in last_started %}
                 <tr>
                     <td>{{ i.created_at }}</td>
                     <td>{{ i.user_email }}</td>
@@ -53,33 +47,50 @@
     </table>
 
     <div>
-        <h5>Stats since 10/15/2020</h5>
-    </div>
-
-    <div>
-        <b>Total Completed:</b> {{ total_completed }}
-    </div>
-
-    <div>
-        <b>Most popular completed module:</b> {{ most_popular }} ({{ most_popular_count }})
-    </div>
-
-    <div>
-        <b><a href="dashboard/surveys">Surveys taken: {{ surveycount }}</a></b>
-    </div>
-    <br/>
-
-    <div>
-        Export data: <a href="dashboard/export/started">Started</a> | <a href="dashboard/export/completed">Completed</a>
+        <ul>
+            <li><a href="dashboard/surveys">Surveys</a></li>
+            <li><b>Total Completed:</b> {{ total_completed }}</li>
+            <li><b>Most popular completed module:</b> {{ most_popular }} ({{ most_popular_count }})</li>
+            <li></b>Export as JSON:</b> <a href="dashboard/export/started">Started</a> | <a href="dashboard/export/completed">Completed</a> | <a href="dashboard/export/survey">Surveys</a></li>
+        </ul>
     </div>
 
     <div>
         <form action="dashboard/lookupuser" method="POST">
-        <label>Look up a user:</label>
-        <input type="text" id="user" name="user">
+        <label>Look up a user's all time completed modules:</label>
+        <input type="text" id="user" name="user" value="user@email.com">
         <input type="submit" value="Submit">
         </form>
     </div>
 
-</body>
-</html>
+    <script>
+        $(document).ready( function () {
+            $('#completed').DataTable({
+                "pageLength": 10,
+                "dom": 'B<"clear">lfrtip',
+                "buttons": [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+            });
+            $('#started').DataTable({
+                "pageLength": 10,
+                "dom": 'B<"clear">lfrtip',
+                "buttons": [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+            });
+        } );
+    </script>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted d-flex justify-content-left">Only last 5000 Completed Modules are shown
+            </span>
+
+            <!-- <span class="text-muted d-flex justify-content-center">
+                Total Completed: {{ total_completed }} | Most popular completed module: {{ most_popular }} ({{ most_popular_count }}) | Export data: <a href="dashboard/export/started">Started</a> | <a href="dashboard/export/completed">Completed</a>
+            </span> -->
+        </div>
+
+    </footer>
+    {% endblock %}

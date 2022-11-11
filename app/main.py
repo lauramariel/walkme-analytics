@@ -175,19 +175,20 @@ def dashboard():
     # Last 10 Started Walkthroughs
     if scount < 10:
         # if less than 10 then show all
-        last_10_started = list(started.find().sort("created_at", -1))
+        last_started = list(started.find().sort("created_at", -1))
     else:
-        last_10_started = list(started.find().sort("created_at", -1).limit(10))
+        last_started = list(started.find().sort("created_at", -1).limit(100))
 
     # Last 10 Completed Modules
     if ccount < 10:
         # if less than 10 then show all
-        last_10_completed = list(completed.find().sort("created_at", -1))
+        last_completed = list(completed.find().sort("created_at", -1))
     else:
-        last_10_completed = list(completed.find().sort("created_at", -1).limit(10))
+        last_completed = list(completed.find().sort("created_at", -1).limit(100))
+        # last_completed = list(completed.find())
 
     # convert timestamps and wm_env
-    for i in last_10_completed:
+    for i in last_completed:
         orig_time = i["created_at"]
         new_time = format_time(orig_time)
         i["created_at"] = new_time
@@ -196,7 +197,7 @@ def dashboard():
         env_text = format_wm_env(wm_env)
         i["wm_env"] = env_text
 
-    for i in last_10_started:
+    for i in last_started:
         orig_time = i["created_at"]
         new_time = format_time(orig_time)
         i["created_at"] = new_time
@@ -218,8 +219,8 @@ def dashboard():
 
     return render_template(
         "index.html",
-        last_10_started=last_10_started,
-        last_10_completed=last_10_completed,
+        last_started=last_started,
+        last_completed=last_completed,
         total_completed=completed.count_documents({}),
         most_popular=max_name,
         most_popular_count=max,
@@ -315,7 +316,7 @@ def export_files(collection):
             file.write("]")
         logger.info("Started collection written to file")
         filename = "started.json"
-        return send_file(filename, attachment_filename=filename, as_attachment=True)
+        return send_file(filename, download_name=filename, as_attachment=True)
 
     if collection == "completed":
         logger.info("Completed collection requested")
@@ -329,7 +330,21 @@ def export_files(collection):
             file.write("]")
         logger.info("Completed collection written to file")
         filename = "completed.json"
-        return send_file(filename, attachment_filename=filename, as_attachment=True)
+        return send_file(filename, download_name=filename, as_attachment=True)
+
+    if collection == "survey":
+        logger.info("survey_results collection requested")
+        survey = db[survey_tbl]
+        survey_data = survey.find()
+        with open("survey.json", "w") as file:
+            file.write("[")
+            for document in survey_data:
+                file.write(dumps(document))
+                file.write(",")
+            file.write("]")
+        logger.info("Survey collection written to file")
+        filename = "survey.json"
+        return send_file(filename, download_name=filename, as_attachment=True)
         # return Response(
         #     file,
         #     mimetype="text/plain",
@@ -344,7 +359,7 @@ def survey_results():
     surveys = db[survey_tbl]
 
     # returns a list of dicts
-    survey_results = list(surveys.find().sort("created_at", -1).limit(100))
+    survey_results = list(surveys.find().sort("created_at", -1))
 
     # make a copy of the list so we can modify the original while looping through the copy
     survey_results_copy = survey_results[:]
@@ -355,7 +370,7 @@ def survey_results():
         new_time = format_time(orig_time)
         if new_time == "test_data":
             # if it's test data, remove it
-            logger.info(f"Removing {i.get('created_at')}")
+            logger.info(f"Removing test data: {i.get('created_at')}")
             survey_results.remove(i)
             pass
         else:
