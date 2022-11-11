@@ -232,10 +232,9 @@ def dashboard():
 def format_time(orig_time):
     # When testing from WalkMe it sends all values as strings
     # So check that it's not a test string
-    # othwerise it should be a bson.int64.Int64
-    logger.info(f"orig_time: {orig_time} Type: {type(orig_time)}")
+    # otherwise it should be a bson.int64.Int64
     if isinstance(orig_time, str):
-        return orig_time
+        return "test_data"
     else:
         epoch = orig_time / 1000
         new_time = (
@@ -347,11 +346,20 @@ def survey_results():
     # returns a list of dicts
     survey_results = list(surveys.find().sort("created_at", -1).limit(100))
 
+    # make a copy of the list so we can modify the original while looping through the copy
+    survey_results_copy = survey_results[:]
+
     # format timestamps and hostname by updating the dictionary
-    for i in survey_results:
+    for i in survey_results_copy:
         orig_time = i["created_at"]
         new_time = format_time(orig_time)
-        i["created_at"] = new_time
+        if new_time == "test_data":
+            # if it's test data, remove it
+            logger.info(f"Removing {i.get('created_at')}")
+            survey_results.remove(i)
+            pass
+        else:
+            i["created_at"] = new_time
 
         orig_hostname = i["ctx_location_hostname"]
         new_hostname = orig_hostname.split(".")[0]
