@@ -18,6 +18,7 @@ google-cloud-core = "*"
 google-api-core = "*"
 dnspython = "*"
 pre-commit = "*"
+cfgv = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
