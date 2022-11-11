@@ -163,13 +163,12 @@ def dashboard():
     # all_data = list(started.find())
     # logger.debug(all_data)
 
-    scount = started.count()
-    ccount = completed.count()
-    svcount = survey.find(
-        {"oName": "How was your Test Drive experience today?"}
-    ).count()
+    # .count() deprecated in pymongo 3.7
+    scount = started.count_documents({})
+    ccount = completed.count_documents({})
+    svcount = survey.count_documents({})
 
-    logger.debug(f"Surveys Taken: {svcount}")
+    logger.debug(f"Survey count: {svcount}")
     logger.debug(f"Started count: {scount}")
     logger.debug(f"Completed count: {ccount}")
 
