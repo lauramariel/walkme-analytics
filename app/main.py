@@ -220,7 +220,7 @@ def dashboard():
         "index.html",
         last_10_started=last_10_started,
         last_10_completed=last_10_completed,
-        total_completed=completed.count(),
+        total_completed=completed.count_documents({}),
         most_popular=max_name,
         most_popular_count=max,
         user_list=all_users,
@@ -232,7 +232,11 @@ def dashboard():
 def format_time(orig_time):
     # When testing from WalkMe it sends all values as strings
     # So check that it's not a test string
-    if str.isdigit(orig_time):
+    # othwerise it should be a bson.int64.Int64
+    logger.info(f"orig_time: {orig_time} Type: {type(orig_time)}")
+    if isinstance(orig_time, str):
+        return orig_time
+    else:
         epoch = orig_time / 1000
         new_time = (
             datetime.datetime.fromtimestamp(epoch)
@@ -240,8 +244,6 @@ def format_time(orig_time):
             .strftime("%Y-%m-%d %H:%M:%S")
         )
         return new_time
-    else:
-        return orig_time
 
 
 # convert wm_env to string value
