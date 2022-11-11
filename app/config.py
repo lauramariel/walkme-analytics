@@ -1,9 +1,16 @@
 from google.cloud import secretmanager
+import os
 import logging
 import json
 
-logger = logging.getLogger("gunicorn.error")
-logger.setLevel(logger.level)
+if os.environ.get("FLASK_DEBUG"):
+    # Running locally so we're in dev mode
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO)
+    logger.info("Running in dev")
+else:
+    logger = logging.getLogger("gunicorn.error")
+    logger.setLevel(logger.level)
 
 ENV = "prod"
 
