@@ -231,13 +231,18 @@ def dashboard():
 
 # convert time from epoch to UTC
 def format_time(orig_time):
-    epoch = orig_time / 1000
-    new_time = (
-        datetime.datetime.fromtimestamp(epoch)
-        .astimezone()
-        .strftime("%Y-%m-%d %H:%M:%S")
-    )
-    return new_time
+    # When testing from WalkMe it sends all values as strings
+    # So check that it's not a test string
+    if str.isdigit(orig_time):
+        epoch = orig_time / 1000
+        new_time = (
+            datetime.datetime.fromtimestamp(epoch)
+            .astimezone()
+            .strftime("%Y-%m-%d %H:%M:%S")
+        )
+        return new_time
+    else:
+        return orig_time
 
 
 # convert wm_env to string value
